@@ -106,6 +106,7 @@ public abstract class HystrixConcurrencyStrategy {
                 logger.error("Hystrix ThreadPool configuration at startup for : " + threadPoolKey.name() + " is trying to set coreSize = " +
                         dynamicCoreSize + " and maximumSize = " + dynamicMaximumSize + ".  Maximum size will be set to " +
                         dynamicCoreSize + ", the coreSize value, since it must be equal to or greater than the coreSize value");
+                // 最终是根据属性创建了ThreadPoolExecutor
                 return new ThreadPoolExecutor(dynamicCoreSize, dynamicCoreSize, keepAliveTime, TimeUnit.MINUTES, workQueue, threadFactory);
             } else {
                 return new ThreadPoolExecutor(dynamicCoreSize, dynamicMaximumSize, keepAliveTime, TimeUnit.MINUTES, workQueue, threadFactory);

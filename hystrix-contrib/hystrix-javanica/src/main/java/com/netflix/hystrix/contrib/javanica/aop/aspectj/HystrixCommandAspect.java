@@ -60,6 +60,7 @@ import static com.netflix.hystrix.contrib.javanica.utils.ajc.AjcUtils.getAjcMeth
 /**
  * AspectJ aspect to process methods which annotated with {@link HystrixCommand} annotation.
  */
+// 切面
 @Aspect
 public class HystrixCommandAspect {
 
@@ -72,6 +73,7 @@ public class HystrixCommandAspect {
                 .build();
     }
 
+    // 切入点定义，关注添加了@HystrixCommand注解的方法
     @Pointcut("@annotation(com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand)")
 
     public void hystrixCommandAnnotationPointcut() {
@@ -81,23 +83,31 @@ public class HystrixCommandAspect {
     public void hystrixCollapserAnnotationPointcut() {
     }
 
+    // 环绕通知
+    // 环绕通知里面的逻辑就是hystrix的主要处理逻辑
     @Around("hystrixCommandAnnotationPointcut() || hystrixCollapserAnnotationPointcut()")
     public Object methodsAnnotatedWithHystrixCommand(final ProceedingJoinPoint joinPoint) throws Throwable {
+        // 获取原始目标方法
         Method method = getMethodFromTarget(joinPoint);
         Validate.notNull(method, "failed to get method from joinPoint: %s", joinPoint);
+        // 方法不能同时有HystrixCommand和HystrixCollapser两个注解
         if (method.isAnnotationPresent(HystrixCommand.class) && method.isAnnotationPresent(HystrixCollapser.class)) {
             throw new IllegalStateException("method cannot be annotated with HystrixCommand and HystrixCollapser " +
                     "annotations at the same time");
         }
+        // 封装获取元数据，描述方法的元数据
         MetaHolderFactory metaHolderFactory = META_HOLDER_FACTORY_MAP.get(HystrixPointcutType.of(method));
         MetaHolder metaHolder = metaHolderFactory.create(joinPoint);
+        // 获取HystrixInvokable对象，即GenericCommand
         HystrixInvokable invokable = HystrixCommandFactory.getInstance().create(metaHolder);
+        //  执行方法类型：同步、异步、observable
         ExecutionType executionType = metaHolder.isCollapserAnnotationPresent() ?
                 metaHolder.getCollapserExecutionType() : metaHolder.getExecutionType();
 
         Object result;
         try {
             if (!metaHolder.isObservable()) {
+                // 非observable类型，使用CommandExecutor执行命令操作
                 result = CommandExecutor.execute(invokable, executionType, metaHolder);
             } else {
                 result = executeObservable(invokable, executionType, metaHolder);

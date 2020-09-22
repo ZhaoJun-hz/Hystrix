@@ -104,6 +104,7 @@ public interface HystrixThreadPool {
             String key = threadPoolKey.name();
 
             // this should find it for all but the first time
+            // 使用了ConcurrentHashMap对线程池进行缓存
             HystrixThreadPool previouslyCached = threadPools.get(key);
             if (previouslyCached != null) {
                 return previouslyCached;
@@ -112,6 +113,7 @@ public interface HystrixThreadPool {
             // if we get here this is the first time so we need to initialize
             synchronized (HystrixThreadPool.class) {
                 if (!threadPools.containsKey(key)) {
+                    // 缓存中没有再创建
                     threadPools.put(key, new HystrixThreadPoolDefault(threadPoolKey, propertiesBuilder));
                 }
             }

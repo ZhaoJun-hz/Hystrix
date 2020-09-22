@@ -341,6 +341,7 @@ public abstract class HystrixCommand<R> extends AbstractCommand<R> implements Hy
      */
     public R execute() {
         try {
+            // queue()方法会返回Future对象，封装异步处理的结果
             return queue().get();
         } catch (Exception e) {
             throw Exceptions.sneakyThrow(decomposeException(e));
@@ -375,6 +376,7 @@ public abstract class HystrixCommand<R> extends AbstractCommand<R> implements Hy
          * interruption of the execution thread when the "mayInterrupt" flag of Future.cancel(boolean) is set to true;
          * thus, to comply with the contract of Future, we must wrap around it.
          */
+        // Future的获取，业务逻辑的执行，异常后对回退方法的调用一系列处理都使用了RxJava响应编程的内容
         final Future<R> delegate = toObservable().toBlocking().toFuture();
     	
         final Future<R> f = new Future<R>() {

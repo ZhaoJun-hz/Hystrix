@@ -49,6 +49,7 @@ public class CommandExecutor {
 
         switch (executionType) {
             case SYNCHRONOUS: {
+                // 同步的执行类型，进入HystrixCommand类的execute方法
                 return castToExecutable(invokable, executionType).execute();
             }
             case ASYNCHRONOUS: {

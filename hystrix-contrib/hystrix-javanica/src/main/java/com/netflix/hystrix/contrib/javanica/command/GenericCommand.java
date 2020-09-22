@@ -26,7 +26,13 @@ import static com.netflix.hystrix.contrib.javanica.utils.CommonUtils.createArgsF
 
 /**
  * Implementation of AbstractHystrixCommand which returns an Object as result.
+ * 根据元数据信息重写了两个很核心的方法，一个是run方法，封装了对原始目标方法的调用
+ * 一个是getFallBack方法，它封装了对回退方法的调用
+ * 另外，在GenericCommand的上层类构造函数中会完成资源的初始化，比如线程池
+ * 其关系为GenericCommand -> AbstractHystrixCommand -> HystrixCommand -> AbstractCommand
+ * 在AbstractCommand的构造方法，完成一些资源初始化操作
  */
+
 @ThreadSafe
 public class GenericCommand extends AbstractHystrixCommand<Object> {
 
@@ -45,6 +51,7 @@ public class GenericCommand extends AbstractHystrixCommand<Object> {
         return process(new Action() {
             @Override
             Object execute() {
+                // 对目标方法的调用
                 return getCommandAction().execute(getExecutionType());
             }
         });
@@ -68,6 +75,7 @@ public class GenericCommand extends AbstractHystrixCommand<Object> {
         final CommandAction commandAction = getFallbackAction();
         if (commandAction != null) {
             try {
+                // 对fallback降级回退方法的调用
                 return process(new Action() {
                     @Override
                     Object execute() {
